@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Calculadora eV → Frequência e λ</title>
+    <title>SpectraLab</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -278,32 +278,21 @@
         }
 
         function exportarCSV() {
-            let csv = "Energia (eV);Frequência (Hz);Comprimento de Onda (μm);Cor\n";
+            let csv = "Energia (eV),Frequência (Hz),Comprimento de Onda (m)\n";
             const linhas = document.querySelectorAll("#tabela tr");
-            let linhaIndex = 2;
-
             linhas.forEach(tr => {
-                const inputEV = tr.querySelector("td input[data-tipo='eV']");
-                const valorEV = inputEV.value;
-                const cor = tr.querySelector(".cor-label")?.textContent || "";
-
-                if (valorEV.trim() !== "") {
-                    const formulaF = `=SE(A${linhaIndex}<>""; (A${linhaIndex} * 1.602E-19) / 6.626E-34; "")`;
-                    const formulaLambda = `=SE(A${linhaIndex}<>""; (3E8 / ((A${linhaIndex} * 1.602E-19) / 6.626E-34)) * 1E6; "")`;
-
-                    const fieldF = `"${formulaF.replace(/"/g, '""')}"`;
-                    const fieldLambda = `"${formulaLambda.replace(/"/g, '""')}"`;
-
-                    csv += `${valorEV};${fieldF};${fieldLambda};${cor}\n`;
-                    linhaIndex++;
-                }
+                const cols = tr.querySelectorAll("td");
+                const linha = Array.from(cols).map(td =>
+                    td.querySelector("input") ? td.querySelector("input").value : td.textContent
+                );
+                csv += linha.join(",") + "\n";
             });
 
-            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const blob = new Blob([csv], { type: "text/csv" });
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "conversor.csv";
+            a.download = "especto.csv";
             a.click();
             URL.revokeObjectURL(url);
         }
