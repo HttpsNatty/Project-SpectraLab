@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calculadora eV → Frequência e λ</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .main-section {
+            max-width: 700px;
+        }
+
+        h1,
+        h2 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px auto;
+        }
+
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: center;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #4096ED;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .info-box {
+            background: #ffffffcc;
+            padding: 20px;
+            border-left: 5px solid #4096ED;
+            border-radius: 15px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            max-height: 600px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .info-box h2 {
+            margin-top: 0;
+            color: #4096ED;
+        }
+
+        .info-box code {
+            background: #eee;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .info-box .formula {
+            margin: 10px 0;
+            font-size: 15px;
+            color: #333;
+        }
+
+        .button-group {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        #footer {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 5px 0;
+        }
+
+        #footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        #footer a:hover {
+            color: #ff69b4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-section">
+        <h1>SpectraLab</h1>
+        <h2>Conversor elétron-volt → Frequência e λ</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Energia (eV)</th>
+                    <th>Frequência (Hz)</th>
+                    <th>Comprimento de Onda (μm)</th>
+                    <th>Cor</th>
+                </tr>
+            </thead>
+            <tbody id="tabela">
+                <!-- Linhas geradas via JS -->
+            </tbody>
+        </table>
+        <p style="margin-top: 15px; font-size: 14px;">
+            <strong>Dica:</strong> Ao apagar o valor de um campo, os demais serão limpos e a linha ficará pronta para um
+            novo cálculo.
+        </p>
+
+        <div class="button-group">
+            <button onclick="adicionarLinha()">Adicionar Linha</button>
+            <button onclick="exportarCSV()">Exportar como CSV</button>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <h2>Informações</h2>
+        <p><strong>Constante de Planck:</strong> <code>h = 6.626 × 10⁻³⁴ J·s</code></p>
+        <p><strong>Velocidade da luz:</strong> <code>c = 3.0 × 10⁸ m/s</code></p>
+        <p><strong>Conversão:</strong> <code>1 eV = 1.602 × 10⁻¹⁹ J</code></p>
+
+        <p class="formula"><strong>Fórmula da frequência:</strong><br>
+            <code>f = E / h</code>
+        </p>
+
+        <p class="formula"><strong>Fórmula do comprimento de onda:</strong><br>
+            <code>λ = c / f</code>
+        </p>
+        <h3 style="color:#4096ED; margin-top: 20px;">Faixas de Cor (visível)</h3>
+        <ul style="padding-left: 20px; font-size: 14px;">
+            <li><strong>Vermelho:</strong> ~620–750 nm (λ: 0.62–0.75 μm)</li>
+            <li><strong>Laranja:</strong> ~590–620 nm (λ: 0.59–0.62 μm)</li>
+            <li><strong>Amarelo:</strong> ~570–590 nm (λ: 0.57–0.59 μm)</li>
+            <li><strong>Verde:</strong> ~495–570 nm (λ: 0.495–0.57 μm)</li>
+            <li><strong>Azul:</strong> ~450–495 nm (λ: 0.45–0.495 μm)</li>
+            <li><strong>Violeta:</strong> ~380–450 nm (λ: 0.38–0.45 μm)</li>
+        </ul>
+        <p style="font-size: 13px; color: #555;">Valores fora dessa faixa pertencem ao infravermelho ou ultravioleta.
+        </p>
+    </div>
+
+    <script>
+        const h = 6.626e-34;
+        const c = 3e8;
+        const e = 1.602e-19;
+
+        function calcularPorEV(eV) {
+            const energiaJ = eV * e;
+            const f = energiaJ / h;
+            const lambda = c / f;
+            return [f, lambda * 1e6];
+        }
+
+        function calcularPorFrequencia(f) {
+            const energiaJ = h * f;
+            const eV = energiaJ / e;
+            const lambda = c / f;
+            return [eV, lambda * 1e6];
+        }
+
+        function calcularPorLambda(lambdaMicro) {
+            const lambda = lambdaMicro * 1e-6;
+            const f = c / lambda;
+            const energiaJ = h * f;
+            const eV = energiaJ / e;
+            return [eV, f];
+        }
+
+        function obterCorPorLambda(lambda) {
+            if (lambda < 0.38) return "Ultravioleta";
+            if (lambda < 0.45) return "Violeta";
+            if (lambda < 0.495) return "Azul";
+            if (lambda < 0.57) return "Verde";
+            if (lambda < 0.59) return "Amarelo";
+            if (lambda < 0.62) return "Laranja";
+            if (lambda < 0.75) return "Vermelho";
+            return "Infravermelho";
+        }
+
+        function adicionarLinha(valorInicial = null, tipo = "eV") {
+            const tabela = document.getElementById("tabela");
+            const linha = document.createElement("tr");
+
+            const inputs = ["eV", "f", "lambda"].map(tipoInput => {
+                const td = document.createElement("td");
+                const input = document.createElement("input");
+                input.type = "number";
+                input.step = "any";
+                input.dataset.tipo = tipoInput;
+                input.oninput = () => atualizarLinha(linha, tipoInput);
+                td.appendChild(input);
+                linha.appendChild(td);
+                return input;
+            });
+
+            const tdCor = document.createElement("td");
+            tdCor.textContent = "-";
+            tdCor.className = "cor-label";
+            linha.appendChild(tdCor);
+
+            tabela.appendChild(linha);
+
+            if (valorInicial !== null && tipo === "eV") {
+                inputs[0].value = valorInicial;
+                atualizarLinha(linha, "eV");
+            }
+        }
+
+        function atualizarLinha(linha, tipoAtivo) {
+            const [inEV, inF, inLambda] = Array.from(linha.querySelectorAll("input"));
+            const tdCor = linha.querySelector(".cor-label");
+            const valorEV = parseFloat(inEV.value);
+            const valorF = parseFloat(inF.value);
+            const valorLambda = parseFloat(inLambda.value);
+
+            if (linha.querySelector(`input[data-tipo='${tipoAtivo}']`).value === "") {
+                [inEV, inF, inLambda].forEach(input => {
+                    input.value = "";
+                    input.disabled = false;
+                });
+                tdCor.textContent = "-";
+                return;
+            }
+
+            [inEV, inF, inLambda].forEach(input => {
+                input.disabled = input.dataset.tipo !== tipoAtivo;
+            });
+
+            let lambda;
+            if (tipoAtivo === "eV" && !isNaN(valorEV)) {
+                const [f, l] = calcularPorEV(valorEV);
+                inF.value = f.toExponential(3);
+                inLambda.value = l.toExponential(3);
+                lambda = l;
+            } else if (tipoAtivo === "f" && !isNaN(valorF)) {
+                const [eV, l] = calcularPorFrequencia(valorF);
+                inEV.value = eV.toExponential(3);
+                inLambda.value = l.toExponential(3);
+                lambda = l;
+            } else if (tipoAtivo === "lambda" && !isNaN(valorLambda)) {
+                const [eV, f] = calcularPorLambda(valorLambda);
+                inEV.value = eV.toExponential(3);
+                inF.value = f.toExponential(3);
+                lambda = valorLambda;
+            }
+
+            if (lambda !== undefined) {
+                tdCor.textContent = obterCorPorLambda(lambda);
+            }
+        }
+
+        function exportarCSV() {
+            let csv = "Energia (eV);Frequência (Hz);Comprimento de Onda (μm);Cor\n";
+            const linhas = document.querySelectorAll("#tabela tr");
+            let linhaIndex = 2;
+
+            linhas.forEach(tr => {
+                const inputEV = tr.querySelector("td input[data-tipo='eV']");
+                const valorEV = inputEV.value;
+                const cor = tr.querySelector(".cor-label")?.textContent || "";
+
+                if (valorEV.trim() !== "") {
+                    const formulaF = `=SE(A${linhaIndex}<>""; (A${linhaIndex} * 1.602E-19) / 6.626E-34; "")`;
+                    const formulaLambda = `=SE(A${linhaIndex}<>""; (3E8 / ((A${linhaIndex} * 1.602E-19) / 6.626E-34)) * 1E6; "")`;
+
+                    const fieldF = `"${formulaF.replace(/"/g, '""')}"`;
+                    const fieldLambda = `"${formulaLambda.replace(/"/g, '""')}"`;
+
+                    csv += `${valorEV};${fieldF};${fieldLambda};${cor}\n`;
+                    linhaIndex++;
+                }
+            });
+
+            const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "conversor.csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Linhas iniciais com valores predefinidos
+        adicionarLinha(1.65); // Fora do visível (~750 nm)
+        adicionarLinha(2.0); // Vermelho
+        adicionarLinha(2.1); // Laranja
+        adicionarLinha(2.2); // Laranja
+        adicionarLinha(2.15); // Amarelo
+        adicionarLinha(2.4);  // Verde
+        adicionarLinha(2.75); // Azul
+        adicionarLinha(3.0); // Violeta
+    </script>
+
+</body>
+<div id="footer">
+    Desenvolvido por
+    <a href="https://github.com/HttpsNatty" target="_blank">Natty</a>
+</div>
+
+</html>
